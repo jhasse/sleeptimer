@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import subprocess, platform
+import subprocess, os
 from gi.repository import Gtk, GLib
 
 class SleepTimer(Gtk.Builder):
