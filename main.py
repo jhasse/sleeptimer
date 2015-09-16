@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import subprocess
+import subprocess, platform
 from gi.repository import Gtk, GLib
 
 class SleepTimer(Gtk.Builder):
@@ -32,8 +32,19 @@ class SleepTimer(Gtk.Builder):
                 hours = self.spin_buttons[0].get_value_as_int()
                 if hours == 0:
                     if self.get_object("checkbutton1").get_active():
-                        subprocess.check_call("pactl set-sink-mute 1 1", shell=True)
-                    subprocess.call("systemctl suspend", shell=True)
+                        if platform.system() == "Windows":
+                            subprocess.check_call("nircmd.exe mutesysvolume 1")
+                        else:
+                            subprocess.check_call("pactl set-sink-mute 1 1", shell=True)
+
+                    hibernate = self.get_object("hibernate").get_active()
+                    if platform.system() == "Windows":
+                        subprocess.check_call(
+                            "nircmd.exe " + "hibernate" if hibernate else "standby"
+                        )
+                    else:
+                        subprocess.call("systemctl suspend", shell=True)
+
                     Gtk.main_quit()
                     return False
                 self.spin_buttons[0].set_value(hours - 1)
