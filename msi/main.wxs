@@ -11,8 +11,8 @@
                     <Directory Id="data" Name="data">
                         <Component Id="sleeptimer.exe" DiskId="1" Guid="*">
                             <File Id="sleeptimer.exe" Name="sleeptimer.exe" Source="sleeptimer.exe" KeyPath="yes">
-                                <Shortcut Id="desktopShortcut" Directory="DesktopFolder" Name="Sleeptimer" WorkingDirectory="INSTALLDIR" Advertise="yes" Icon="icon.exe" IconIndex="0" />
-                                <Shortcut Id="ExeShortcut" Directory="ProgramMenuDir" Name="Sleeptimer" Advertise="yes" Icon="icon.exe" IconIndex="0" WorkingDirectory="data" />
+                                <Shortcut Id="desktopShortcut" Directory="DesktopFolder" Name="Sleeptimer" Advertise="yes" Icon="icon.ico" IconIndex="0" WorkingDirectory="data" />
+                                <Shortcut Id="ExeShortcut" Directory="ProgramMenuDir" Name="Sleeptimer" Advertise="yes" Icon="icon.ico" IconIndex="0" WorkingDirectory="data" />
                             </File>
                         </Component>
                     </Directory>
@@ -37,8 +37,7 @@
         <UIRef Id="WixUI_InstallDir" />
         <WixVariable Id="WixUILicenseRtf" Value="gpl3.rtf" />
         <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
-        <Icon Id="icon.exe" SourceFile="../time.ico" />
-        <Property Id="ARPPRODUCTICON" Value="icon.exe" />
+        <Icon Id="icon.ico" SourceFile="sleeptimer.exe" />
         <Property Id="ALLUSERS" Secure="yes" Value="2"/>
         <Property Id="MSIINSTALLPERUSER" Secure="yes" Value="1"/>
     </Product>
