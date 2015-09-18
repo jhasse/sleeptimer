@@ -4,6 +4,7 @@
         <Package Description="Sleeptimer Installer"
           Manufacturer="bixense.com"
           InstallerVersion="200" Languages="1033" Compressed="yes" />
+        <MajorUpgrade AllowDowngrades="yes"/>
         <Media Id="1" Cabinet="simple.cab" EmbedCab="yes" />
         <Directory Id="TARGETDIR" Name="SourceDir">
             <Directory Id="ProgramFilesFolder" Name="PFiles">
@@ -37,6 +38,7 @@
         <UIRef Id="WixUI_InstallDir" />
         <WixVariable Id="WixUILicenseRtf" Value="gpl3.rtf" />
         <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
+        <Property Id="ARPPRODUCTICON" Value="icon.ico" />
         <Icon Id="icon.ico" SourceFile="sleeptimer.exe" />
         <Property Id="ALLUSERS" Secure="yes" Value="2"/>
         <Property Id="MSIINSTALLPERUSER" Secure="yes" Value="1"/>
