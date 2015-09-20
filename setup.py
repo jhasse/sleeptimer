@@ -26,7 +26,7 @@ gtk_libs = ['etc', 'lib', 'share/icons']
 
 
 include_files = [(os.path.join(include_dll_path, x), x) for x in missing_dll]
-include_files.append(('main.glade', 'main.glade'))
+include_files += [(x, x) for x in ('main.glade', 'nircmd.exe')]
 
 ## Let's add gtk libraries folders and files
 for lib in gtk_libs:

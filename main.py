@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import subprocess, os
+import subprocess, platform
 from gi.repository import Gtk, GLib
 
 class SleepTimer(Gtk.Builder):
@@ -37,13 +37,11 @@ class SleepTimer(Gtk.Builder):
                         else:
                             subprocess.check_call("pactl set-sink-mute 1 1", shell=True)
 
-                    hibernate = self.get_object("hibernate").get_active()
+                    cmd = "hibernate" if self.get_object("hibernate").get_active() else "standby"
                     if platform.system() == "Windows":
-                        subprocess.check_call(
-                            "nircmd.exe " + "hibernate" if hibernate else "standby"
-                        )
+                        subprocess.check_call("nircmd.exe " + cmd)
                     else:
-                        subprocess.call("systemctl suspend", shell=True)
+                        subprocess.call("systemctl " + cmd, shell=True)
 
                     Gtk.main_quit()
                     return False
