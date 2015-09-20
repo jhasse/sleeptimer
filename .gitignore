@@ -55,3 +55,8 @@ docs/_build/
 
 # PyBuilder
 target/
+
+msi/*.wixobj
+msi/*.wxs
+msi/*.wixpdb
+msi/*.msi

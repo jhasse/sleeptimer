@@ -38,6 +38,7 @@
         <UIRef Id="WixUI_InstallDir" />
         <WixVariable Id="WixUILicenseRtf" Value="gpl3.rtf" />
         <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
+        <WixVariable Id="WixUIBannerBmp" Value="banner.bmp" />
         <Property Id="ARPPRODUCTICON" Value="icon.ico" />
         <Icon Id="icon.ico" SourceFile="sleeptimer.exe" />
         <Property Id="ALLUSERS" Secure="yes" Value="2"/>
