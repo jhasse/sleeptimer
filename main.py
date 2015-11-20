@@ -9,9 +9,9 @@ class SleepTimer(Gtk.Builder):
         self.connect_signals(self)
 
         self.spin_buttons = (
-            self.get_object("spinbutton1"),
-            self.get_object("spinbutton2"),
-            self.get_object("spinbutton3"),
+            self.get_object("spinbutton_h"),
+            self.get_object("spinbutton_min"),
+            self.get_object("spinbutton_s"),
         )
 
         window = self.get_object("window1")
@@ -59,6 +59,46 @@ class SleepTimer(Gtk.Builder):
 
         if button.get_active():
             GLib.timeout_add(1000, self.on_timer)
+
+    def on_time_changed(self):
+        self.get_object("togglebutton1").set_sensitive(
+            self.spin_buttons[0].get_value() != 0 or
+            self.spin_buttons[1].get_value() != 0 or
+            self.spin_buttons[2].get_value() != 0
+        )
+
+    def on_h_changed(self, spin_button):
+        self.on_time_changed()
+
+    def on_min_changed(self, spin_button):
+        """
+        When minutes drop below 0 deincrease hours and when they get above 59 increase hours
+        """
+        while spin_button.get_value() < 0:
+            if self.spin_buttons[0].get_value() == 0:
+                spin_button.set_value(0)
+            else:
+                spin_button.set_value(spin_button.get_value() + 60)
+                self.spin_buttons[0].set_value(self.spin_buttons[0].get_value() - 1)
+        while spin_button.get_value() > 59:
+            spin_button.set_value(spin_button.get_value() - 60)
+            self.spin_buttons[0].set_value(self.spin_buttons[0].get_value() + 1)
+        self.on_time_changed()
+
+    def on_s_changed(self, spin_button):
+        """
+        When seconds drop below 0 deincrease minutes and when they get above 59 increase minutes
+        """
+        while spin_button.get_value() < 0:
+            if self.spin_buttons[0].get_value() == 0 and self.spin_buttons[1].get_value() == 0:
+                spin_button.set_value(0)
+            else:
+                spin_button.set_value(spin_button.get_value() + 60)
+                self.spin_buttons[1].set_value(self.spin_buttons[1].get_value() - 1)
+        while spin_button.get_value() > 59:
+            spin_button.set_value(spin_button.get_value() - 60)
+            self.spin_buttons[1].set_value(self.spin_buttons[1].get_value() + 1)
+        self.on_time_changed()
 
     def on_delete_window(self, *args):
         Gtk.main_quit(*args)
