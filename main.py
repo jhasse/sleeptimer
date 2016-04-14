@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 import subprocess, platform
+import gi
+gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GLib
 
 class SleepTimer(Gtk.Builder):
@@ -44,7 +46,7 @@ class SleepTimer(Gtk.Builder):
                     else:
                         subprocess.call("systemctl " + (
                             "hibernate" if self.get_object("hibernate").get_active() else "suspend"
-                        ), shell=True)
+                        ) + " -i", shell=True)
 
                     Gtk.main_quit()
                     return False
