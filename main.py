@@ -37,7 +37,7 @@ class SleepTimer(Gtk.Builder):
                         if platform.system() == "Windows":
                             subprocess.check_call("nircmd.exe mutesysvolume 1")
                         else:
-                            subprocess.check_call("pactl set-sink-mute 1 1", shell=True)
+                            subprocess.check_call("pactl set-sink-mute 0 1", shell=True)
 
                     if platform.system() == "Windows":
                         subprocess.check_call("nircmd.exe " + (
