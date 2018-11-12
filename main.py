@@ -44,9 +44,12 @@ class SleepTimer(Gtk.Builder):
                             "hibernate" if self.get_object("hibernate").get_active() else "standby"
                         ))
                     else:
-                        subprocess.call("systemctl " + (
-                            "hibernate" if self.get_object("hibernate").get_active() else "suspend"
-                        ) + " -i", shell=True)
+                        verb = "suspend"
+                        if self.get_object("hibernate").get_active():
+                            verb = "hibernate"
+                        elif self.get_object("shutdown").get_active():
+                            verb = "poweroff"
+                        subprocess.call("systemctl " + verb + " -i", shell=True)
 
                     Gtk.main_quit()
                     return False

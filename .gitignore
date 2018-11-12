@@ -60,3 +60,5 @@ msi/*.wixobj
 msi/*.wxs
 msi/*.wixpdb
 msi/*.msi
+
+/main.glade~
