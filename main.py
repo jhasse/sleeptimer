@@ -2,7 +2,7 @@
 import subprocess, platform
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, GLib
+from gi.repository import Gtk, GLib, Gdk
 
 class SleepTimer(Gtk.Builder):
     def __init__(self):
@@ -16,6 +16,11 @@ class SleepTimer(Gtk.Builder):
             self.get_object("spinbutton_s"),
         )
 
+        self.css_provider = Gtk.CssProvider()
+        self.get_object("togglebutton1").get_style_context().add_provider(
+            self.css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+        self.start_seconds_left = 0
         window = self.get_object("window1")
         window.show_all()
 
@@ -56,6 +61,9 @@ class SleepTimer(Gtk.Builder):
                 self.spin_buttons[0].set_value(hours - 1)
             self.spin_buttons[1].set_value(minutes - 1)
         self.spin_buttons[2].set_value(seconds - 1)
+        self.css_provider.load_from_data(".install-progress {{ background-size: {}%; }}".format(
+                int(self.get_seconds_left() * 100 / self.start_seconds_left)
+        ).encode())
         return True
 
     def on_toggled(self, button):
@@ -63,6 +71,19 @@ class SleepTimer(Gtk.Builder):
         Start button toggled
         """
         self.spin_buttons[2].set_sensitive(not button.get_active()) # seconds
+
+        context = button.get_style_context()
+        if button.get_active():
+            context.add_class("install-progress")
+            context.remove_class("suggested-action")
+            self.css_provider.load_from_data(b".install-progress { background-size: 100%; }")
+            self.start_seconds_left = self.get_seconds_left()
+            self.previous_label = button.get_label()
+            button.set_label("_Stop")
+        else:
+            context.remove_class("install-progress")
+            context.add_class("suggested-action")
+            button.set_label(self.previous_label)
 
         if button.get_active():
             GLib.timeout_add(1000, self.on_timer)
@@ -73,6 +94,9 @@ class SleepTimer(Gtk.Builder):
             self.spin_buttons[1].get_value() != 0 or
             self.spin_buttons[2].get_value() != 0
         )
+        # If the user increases the time while it's running this could result in a negative
+        # percentage for the progress bar. Adjust the start time so that it never happens:
+        self.start_seconds_left = max(self.start_seconds_left, self.get_seconds_left())
 
     def on_h_changed(self, spin_button):
         self.on_time_changed()
@@ -110,5 +134,23 @@ class SleepTimer(Gtk.Builder):
     def on_delete_window(self, *args):
         Gtk.main_quit(*args)
 
+    def get_seconds_left(self):
+        return self.spin_buttons[0].get_value() * 3600 + self.spin_buttons[1].get_value() * 60 + \
+            self.spin_buttons[2].get_value()
+
+
+style_provider = Gtk.CssProvider()
+style_provider.load_from_data(b""".install-progress {
+	background-image: linear-gradient(to top, @theme_selected_bg_color 2px, alpha(@theme_selected_bg_color, 0) 2px);
+	background-repeat: no-repeat;
+	background-position: 0 bottom;
+	transition: none;
+}
+.install-progress { background-position: 100% bottom; }
+""")
+Gtk.StyleContext.add_provider_for_screen(
+    Gdk.Screen.get_default(), style_provider,
+    Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+)
 SleepTimer()
 Gtk.main()
