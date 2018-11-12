@@ -32,10 +32,11 @@
         <property name="show_close_button">True</property>
         <child>
           <object class="GtkToggleButton" id="togglebutton1">
-            <property name="label" translatable="yes">Start</property>
+            <property name="label" translatable="yes">_Start</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
+            <property name="use_underline">True</property>
             <signal name="toggled" handler="on_toggled" swapped="no"/>
           </object>
         </child>
@@ -157,10 +158,11 @@
             <property name="spacing">15</property>
             <child>
               <object class="GtkCheckButton" id="checkbutton1">
-                <property name="label" translatable="yes">Mute sound before ...</property>
+                <property name="label" translatable="yes">_Mute sound before ...</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
+                <property name="use_underline">True</property>
                 <property name="draw_indicator">True</property>
               </object>
               <packing>
@@ -171,10 +173,11 @@
             </child>
             <child>
               <object class="GtkRadioButton" id="shutdown">
-                <property name="label" translatable="yes">Shutdown</property>
+                <property name="label" translatable="yes">Shut_down</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
+                <property name="use_underline">True</property>
                 <property name="active">True</property>
                 <property name="draw_indicator">True</property>
                 <property name="group">standby</property>
@@ -188,10 +191,11 @@
             </child>
             <child>
               <object class="GtkRadioButton" id="hibernate">
-                <property name="label" translatable="yes">Hibernate</property>
+                <property name="label" translatable="yes">_Hibernate</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
+                <property name="use_underline">True</property>
                 <property name="active">True</property>
                 <property name="draw_indicator">True</property>
                 <property name="group">standby</property>
@@ -205,11 +209,12 @@
             </child>
             <child>
               <object class="GtkRadioButton" id="standby">
-                <property name="label" translatable="yes">Standby</property>
+                <property name="label" translatable="yes">St_andby</property>
                 <property name="name">0</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
+                <property name="use_underline">True</property>
                 <property name="active">True</property>
                 <property name="draw_indicator">True</property>
               </object>
