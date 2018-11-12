@@ -62,8 +62,7 @@ class SleepTimer(Gtk.Builder):
         """
         Start button toggled
         """
-        for spin_button in self.spin_buttons:
-            spin_button.set_sensitive(not button.get_active())
+        self.spin_buttons[2].set_sensitive(not button.get_active()) # seconds
 
         if button.get_active():
             GLib.timeout_add(1000, self.on_timer)
