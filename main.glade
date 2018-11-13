@@ -85,8 +85,6 @@
                 <property name="can_focus">True</property>
                 <property name="max_length">60</property>
                 <property name="max_width_chars">1</property>
-                <property name="progress_fraction">0.01</property>
-                <property name="progress_pulse_step">0.11</property>
                 <property name="adjustment">minutes</property>
                 <property name="climb_rate">1</property>
                 <signal name="value-changed" handler="on_min_changed" swapped="no"/>
