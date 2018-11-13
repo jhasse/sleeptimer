@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import subprocess, platform
+import configparser, subprocess, platform
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GLib, Gdk
@@ -21,6 +21,23 @@ class SleepTimer(Gtk.Builder):
             self.css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
         self.start_seconds_left = 0
+
+        self.config = configparser.ConfigParser()
+        self.config.read('settings.ini')
+        if 'default' in self.config.sections():
+            try:
+                self.spin_buttons[2].set_value(int(self.config['default']['seconds']))
+                self.get_object(self.config['default']['mode']).set_active(True)
+                if self.config['default']['mute'] == 'True':
+                    self.get_object('checkbutton1').set_active(True)
+            except ValueError as err:
+                print(err)
+            except KeyError as err:
+                print('KeyError: {}'.format(err))
+        else:
+            self.config['default'] = {}
+            self.spin_buttons[0].set_value(1)
+
         self.window = self.get_object("window1")
         self.window.show_all()
 
@@ -90,6 +107,15 @@ class SleepTimer(Gtk.Builder):
             context.remove_class("suggested-action")
             self.css_provider.load_from_data(b".install-progress { background-size: 100%; }")
             self.start_seconds_left = self.get_seconds_left()
+            with open('settings.ini', 'w') as file:
+                self.config['default']['seconds'] = str(int(self.start_seconds_left))
+                self.config['default']['mode'] = 'standby'
+                if self.get_object('hibernate').get_active():
+                    self.config['default']['mode'] = 'hibernate'
+                elif self.get_object('shutdown').get_active():
+                    self.config['default']['mode'] = 'shutdown'
+                self.config['default']['mute'] = str(self.get_object("checkbutton1").get_active())
+                self.config.write(file)
             self.previous_label = button.get_label()
             button.set_label("_Stop")
         else:
