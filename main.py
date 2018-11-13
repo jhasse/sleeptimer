@@ -45,14 +45,16 @@ class SleepTimer(Gtk.Builder):
                             else:
                                 subprocess.check_output("pactl set-sink-mute 0 1", shell=True)
 
+                        verb = "hibernate"
                         if platform.system() == "Windows":
-                            subprocess.check_output("nircmd.exe " + (
-                                "hibernate" if self.get_object("hibernate").get_active() else "standby"
-                            ))
+                            if self.get_object("standby").get_active():
+                                verb = "standby"
+                            elif self.get_object("shutdown").get_active():
+                                verb = "exitwin poweroff"
+                            subprocess.check_output("nircmd.exe " + verb)
                         else:
-                            verb = "suspend"
-                            if self.get_object("hibernate").get_active():
-                                verb = "hibernate"
+                            if self.get_object("standby").get_active():
+                                verb = "suspend"
                             elif self.get_object("shutdown").get_active():
                                 verb = "poweroff"
                             subprocess.check_output("systemctl " + verb + " -i", shell=True,
