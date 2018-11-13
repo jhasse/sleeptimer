@@ -62,3 +62,4 @@ msi/*.wixpdb
 msi/*.msi
 
 /main.glade~
+/settings.ini
