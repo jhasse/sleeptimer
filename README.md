@@ -1,6 +1,6 @@
 # Sleep Timer
 
-<img title="Screenshot" src="screenshot.png" size="50%"/>
+<img title="Screenshot" src="screenshot.png" width="546px"/>
 
 ## Windows
 
