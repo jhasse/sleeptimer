@@ -21,8 +21,8 @@ class SleepTimer(Gtk.Builder):
             self.css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
         self.start_seconds_left = 0
-        window = self.get_object("window1")
-        window.show_all()
+        self.window = self.get_object("window1")
+        self.window.show_all()
 
     def on_timer(self):
         """
@@ -38,24 +38,34 @@ class SleepTimer(Gtk.Builder):
                 minutes = 60
                 hours = self.spin_buttons[0].get_value_as_int()
                 if hours == 0:
-                    if self.get_object("checkbutton1").get_active():
+                    try:
+                        if self.get_object("checkbutton1").get_active():
+                            if platform.system() == "Windows":
+                                subprocess.check_output("nircmd.exe mutesysvolume 1")
+                            else:
+                                subprocess.check_output("pactl set-sink-mute 0 1", shell=True)
+
                         if platform.system() == "Windows":
-                            subprocess.check_call("nircmd.exe mutesysvolume 1")
+                            subprocess.check_output("nircmd.exe " + (
+                                "hibernate" if self.get_object("hibernate").get_active() else "standby"
+                            ))
                         else:
-                            subprocess.check_call("pactl set-sink-mute 0 1", shell=True)
+                            verb = "suspend"
+                            if self.get_object("hibernate").get_active():
+                                verb = "hibernate"
+                            elif self.get_object("shutdown").get_active():
+                                verb = "poweroff"
+                            subprocess.check_output("systemctl " + verb + " -i", shell=True,
+                                                    stderr=subprocess.STDOUT)
 
-                    if platform.system() == "Windows":
-                        subprocess.check_call("nircmd.exe " + (
-                            "hibernate" if self.get_object("hibernate").get_active() else "standby"
-                        ))
-                    else:
-                        verb = "suspend"
-                        if self.get_object("hibernate").get_active():
-                            verb = "hibernate"
-                        elif self.get_object("shutdown").get_active():
-                            verb = "poweroff"
-                        subprocess.call("systemctl " + verb + " -i", shell=True)
-
+                    except subprocess.CalledProcessError as err:
+                        dialog = Gtk.MessageDialog(
+                            parent=self.window, message_type=Gtk.MessageType.ERROR,
+                            buttons=Gtk.ButtonsType.CLOSE,
+                            text="`{}` failed with exit code {}".format(err.cmd, err.returncode))
+                        dialog.format_secondary_text(err.stdout.decode('utf-8', 'ignore').strip())
+                        dialog.run()
+                        dialog.destroy()
                     Gtk.main_quit()
                     return False
                 self.spin_buttons[0].set_value(hours - 1)
