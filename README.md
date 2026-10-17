@@ -4,6 +4,12 @@
 
 ## Windows
 
+### Native Win32 / WinAPI (C++)
+
+The [native Windows version](win32/README.md) is in `win32/`. It uses Windows
+controls and power/audio APIs directly, without Python, GTK, or NirCmd. See its
+README for build instructions and a safe dry-run mode.
+
 ### Native Python
 
 Install [Visual Studio 2015](https://www.visualstudio.com/de-de/downloads/download-visual-studio-vs.aspx)
