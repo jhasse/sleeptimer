@@ -1,0 +1,55 @@
+name: Native Windows ARM64
+
+on:
+  push:
+    paths:
+      - 'win32/**'
+      - 'time.ico'
+      - 'LICENSE'
+      - '.github/workflows/win32-arm64.yml'
+  pull_request:
+    paths:
+      - 'win32/**'
+      - 'time.ico'
+      - 'LICENSE'
+      - '.github/workflows/win32-arm64.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Windows ARM64 (Release)
+    runs-on: windows-11-arm
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Configure ARM64 build
+        run: cmake -S win32 -B win32/build/arm64 -G "Visual Studio 17 2022" -A ARM64 -DBUILD_TESTING=ON
+
+      - name: Build Release
+        run: cmake --build win32/build/arm64 --config Release --parallel
+
+      - name: Test
+        run: ctest --test-dir win32/build/arm64 -C Release --output-on-failure --no-tests=error
+
+      - name: Prepare archive contents
+        run: |
+          New-Item -ItemType Directory -Path win32/build/arm64/package | Out-Null
+          Copy-Item -LiteralPath 'win32/build/arm64/Release/sleeptimer.exe', 'win32/README.md', 'LICENSE' -Destination win32/build/arm64/package
+
+      - name: Archive ARM64 build
+        uses: actions/upload-artifact@v7
+        with:
+          name: sleeptimer-windows-arm64
+          path: win32/build/arm64/package/
+          archive: true
+          if-no-files-found: error

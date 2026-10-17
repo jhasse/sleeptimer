@@ -20,6 +20,22 @@ ctest --test-dir win32/build -C Release --output-on-failure
 With Ninja, run CMake from a Visual Studio developer shell and replace `-A x64`
 with `-G Ninja`; the executable will be directly in `win32/build`.
 
+## Windows ARM64
+
+To cross-compile locally, install Visual Studio's ARM64 C++ build tools and use a
+separate build directory:
+
+```powershell
+cmake -S win32 -B win32/build/arm64 -G "Visual Studio 17 2022" -A ARM64
+cmake --build win32/build/arm64 --config Release
+```
+
+The [Native Windows ARM64 workflow](../.github/workflows/win32-arm64.yml) builds
+Release and runs the timer tests on a Windows ARM64 runner. It runs for relevant
+pushes and pull requests, and can also be started manually from GitHub's Actions
+tab. Download the `sleeptimer-windows-arm64` artifact from a successful run for a
+ZIP containing `sleeptimer.exe`, this README, and the license.
+
 ## Use
 
 Choose a duration, Standby, Hibernate, or Shut down, and optionally enable muting.
