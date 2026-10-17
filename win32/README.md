@@ -26,7 +26,7 @@ To cross-compile locally, install Visual Studio's ARM64 C++ build tools and use 
 separate build directory:
 
 ```powershell
-cmake -S win32 -B win32/build/arm64 -G "Visual Studio 17 2022" -A ARM64
+cmake -S win32 -B win32/build/arm64 -G "Visual Studio 18 2026" -A ARM64
 cmake --build win32/build/arm64 --config Release
 ```
 
