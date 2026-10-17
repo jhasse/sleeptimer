@@ -11,13 +11,14 @@
 
 #include "resource.h"
 #include "timer.h"
+#include "media.h"
 
 namespace {
 constexpr UINT_PTR countdownTimer = 1;
 constexpr int timeControls[] = {IDC_HOURS, IDC_MINUTES, IDC_SECONDS};
 constexpr int optionControls[] = {IDC_HOURS, IDC_MINUTES, IDC_SECONDS,
     IDC_HOURS_SPIN, IDC_MINUTES_SPIN, IDC_SECONDS_SPIN,
-    IDC_STANDBY, IDC_HIBERNATE, IDC_SHUTDOWN, IDC_MUTE};
+    IDC_STANDBY, IDC_HIBERNATE, IDC_SHUTDOWN, IDC_PAUSE_MEDIA, IDC_MUTE};
 
 struct App {
     bool dryRun = false;
@@ -68,9 +69,16 @@ void updateStart(HWND window, const App& app) {
 }
 
 int selectedMode(HWND window) {
+    if (IsDlgButtonChecked(window, IDC_PAUSE_MEDIA) == BST_CHECKED) return IDC_PAUSE_MEDIA;
     if (IsDlgButtonChecked(window, IDC_HIBERNATE) == BST_CHECKED) return IDC_HIBERNATE;
     if (IsDlgButtonChecked(window, IDC_SHUTDOWN) == BST_CHECKED) return IDC_SHUTDOWN;
     return IDC_STANDBY;
+}
+
+void selectMode(HWND window, int mode) {
+    // Only touch the four radio buttons; their IDs do not form a contiguous range.
+    for (int id : {IDC_STANDBY, IDC_HIBERNATE, IDC_SHUTDOWN, IDC_PAUSE_MEDIA})
+        CheckDlgButton(window, id, id == mode ? BST_CHECKED : BST_UNCHECKED);
 }
 
 bool settingsPath(HWND window, App& app) {
@@ -103,11 +111,12 @@ void loadSettings(HWND window, App& app) {
         GetPrivateProfileStringW(L"default", L"mode", L"standby", value, 32, app.settings.c_str());
         if (wcscmp(value, L"hibernate") == 0) mode = IDC_HIBERNATE;
         if (wcscmp(value, L"shutdown") == 0) mode = IDC_SHUTDOWN;
+        if (wcscmp(value, L"pause") == 0) mode = IDC_PAUSE_MEDIA;
         GetPrivateProfileStringW(L"default", L"mute", L"False", value, 32, app.settings.c_str());
         mute = _wcsicmp(value, L"True") == 0;
     }
     displayDuration(window, app, seconds);
-    CheckRadioButton(window, IDC_STANDBY, IDC_SHUTDOWN, mode);
+    selectMode(window, mode);
     CheckDlgButton(window, IDC_MUTE, mute ? BST_CHECKED : BST_UNCHECKED);
 }
 
@@ -116,7 +125,7 @@ bool saveSettings(HWND window, App& app, unsigned seconds) {
     if (app.settings.empty() && !settingsPath(window, app)) return false;
     const int mode = selectedMode(window);
     const wchar_t* name = mode == IDC_HIBERNATE ? L"hibernate" :
-        mode == IDC_SHUTDOWN ? L"shutdown" : L"standby";
+        mode == IDC_SHUTDOWN ? L"shutdown" : mode == IDC_PAUSE_MEDIA ? L"pause" : L"standby";
     if (!WritePrivateProfileStringW(L"default", L"seconds", std::to_wstring(seconds).c_str(), app.settings.c_str()) ||
         !WritePrivateProfileStringW(L"default", L"mode", name, app.settings.c_str()) ||
         !WritePrivateProfileStringW(L"default", L"mute",
@@ -176,7 +185,7 @@ void stopTimer(HWND window, App& app) {
     app.running = false;
     for (int id : optionControls) EnableWindow(GetDlgItem(window, id), TRUE);
     SetDlgItemTextW(window, IDOK, L"&Start");
-    SetDlgItemTextW(window, IDC_STATUS, app.dryRun ? L"Dry run: power and audio skipped" : L"Ready");
+    SetDlgItemTextW(window, IDC_STATUS, app.dryRun ? L"Dry run: all actions skipped" : L"Ready");
     SetWindowTextW(window, app.title());
     SendDlgItemMessageW(window, IDC_PROGRESS, PBM_SETPOS, 0, 0);
     updateStart(window, app);
@@ -188,27 +197,62 @@ void finishTimer(HWND window, App& app) {
     const int mode = selectedMode(window);
     const bool mute = IsDlgButtonChecked(window, IDC_MUTE) == BST_CHECKED;
     stopTimer(window, app);
-    CheckRadioButton(window, IDC_STANDBY, IDC_SHUTDOWN, mode);
+    selectMode(window, mode);
     if (app.dryRun) {
         const std::wstring message = std::wstring(L"Dry run complete: ") +
-            (mode == IDC_HIBERNATE ? L"hibernate" : mode == IDC_SHUTDOWN ? L"shutdown" : L"standby") +
+            (mode == IDC_HIBERNATE ? L"hibernate" : mode == IDC_SHUTDOWN ? L"shutdown" :
+                mode == IDC_PAUSE_MEDIA ? L"pause media" : L"standby") +
             (mute ? L" with mute." : L".") +
-            L"\nPower and audio changes were skipped.";
+            L"\nMedia pause, power, and audio changes were skipped.";
         MessageBoxW(window, message.c_str(), L"Sleep Timer - dry run", MB_OK | MB_ICONINFORMATION);
         return;
     }
-    ShutdownPrivilege privilege;
-    const DWORD error = privilege.enable();
-    if (error != ERROR_SUCCESS) {
-        showError(window, L"Could not enable the Windows shutdown privilege.", error);
+    // Try the foreground application first. If it cannot receive the message,
+    // use our own top-level window so DefWindowProc can route it to the shell.
+    const HWND foreground = GetForegroundWindow();
+    DWORD pauseError = requestMediaPause(foreground ? foreground : window, window);
+    if (pauseError != ERROR_SUCCESS && foreground != window)
+        pauseError = requestMediaPause(window, window);
+    if (pauseError != ERROR_SUCCESS) {
+        showError(window, L"Could not send the media pause request. The action was cancelled.", pauseError);
         return;
     }
+    SetDlgItemTextW(window, IDC_STATUS, L"Media pause requested");
     if (mute) {
         const HRESULT result = muteAudio();
         if (FAILED(result)) {
             showError(window, L"Could not mute the default audio output. The power action was cancelled.", result);
             return;
         }
+    }
+    // This action works even if the device supports neither suspend nor hibernate.
+    if (mode == IDC_PAUSE_MEDIA) return;
+    bool modernStandby = false;
+    if (mode == IDC_STANDBY) {
+        SYSTEM_POWER_CAPABILITIES capabilities = {};
+        if (!GetPwrCapabilities(&capabilities)) {
+            showError(window, L"Could not determine the supported standby mode.", GetLastError());
+            return;
+        }
+        modernStandby = capabilities.AoAc != FALSE;
+    }
+    ShutdownPrivilege privilege;
+    // Modern Standby uses a display-off request and needs no shutdown privilege.
+    if (!modernStandby) {
+        const DWORD error = privilege.enable();
+        if (error != ERROR_SUCCESS) {
+            showError(window, L"Could not enable the Windows shutdown privilege.", error);
+            return;
+        }
+    }
+    if (modernStandby) {
+        // S0 low-power idle devices do not support S1-S3 through SetSuspendState.
+        // A display-off request lets Windows enter Modern Standby under its
+        // power policy. DefWindowProc handles this synchronously for our window;
+        // SC_MONITORPOWER has no power-transition success/error result.
+        DefWindowProcW(window, WM_SYSCOMMAND, SC_MONITORPOWER, 2);
+        EndDialog(window, 0);
+        return;
     }
     const BOOL success = mode == IDC_SHUTDOWN
         ? ExitWindowsEx(EWX_POWEROFF, SHTDN_REASON_MAJOR_OTHER | SHTDN_REASON_FLAG_PLANNED)
